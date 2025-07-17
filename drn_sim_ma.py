@@ -142,7 +142,7 @@ def _():
             kd: float,
             dt: float,
             windup: float = None,
-            beta: float = 1.0,
+            beta: float = 0.9,
         ):
             self.kp = kp
             self.ki = ki
@@ -299,7 +299,13 @@ def _():
 
 @app.cell
 def _(sim):
-    sim.ctrl.pid_x.kp
+    sim.ctrl.yaw_pid.kp, sim.ctrl.yaw_pid.ki, sim.ctrl.yaw_pid.kd
+    return
+
+
+@app.cell
+def _(kd_att, ki_att, kp_att):
+    kp_att, ki_att, kd_att
     return
 
 
@@ -312,12 +318,6 @@ def _(kd_alt, ki_alt, kp_alt):
 @app.cell
 def _(kd_xy, ki_xy, kp_xy):
     kp_xy, ki_xy, kd_xy
-    return
-
-
-@app.cell
-def _(kd_att, ki_att, kp_att):
-    kp_att, ki_att, kd_att
     return
 
 
@@ -346,9 +346,10 @@ def _(
 
     target_pos = np.array([0.1, 0.3, 1.0])
     target_yaw = 0.5
-    TMAX = 100*5
+    TMAX = int(100*30)
     states = np.zeros((sim.state.shape[0], TMAX))
     controls = np.zeros((4, TMAX))
+    sim.reset(np.random.rand((12)))
 
     for i in range(TMAX):
         thrust, torque = sim.ctrl.compute(target_pos, target_yaw, sim.state)
@@ -357,29 +358,14 @@ def _(
 
     # print("final state:", sim.state)
     viewer.plot(np.arange(0, TMAX * sim.dt, sim.dt), states)
-    viewer.figs[2]
+    viewer.figs[0]
     return TMAX, controls, sim, viewer
 
 
 @app.cell
 def _(TMAX, controls, np, plt, sim):
-    plt.plot(np.arange(0, TMAX * sim.dt, sim.dt), controls[3,:])
+    plt.plot(np.arange(0, TMAX * sim.dt, sim.dt), controls[1,:])
     return
-
-
-@app.cell
-def _(marimo):
-    kp_alt = marimo.ui.slider(-10, 10, 0.1, value=1.8, label="Altitude P(log)")
-    ki_alt = marimo.ui.slider(-10, 10, 0.1, value=1.4, label="Altitude I(log)")
-    kd_alt = marimo.ui.slider(-10, 10, 0.1, value=1.6, label="Altitude D(log)")
-    kp_xy = marimo.ui.slider(-10, 10, 0.1, value=1.3, label="XY Pos P(log)")
-    ki_xy = marimo.ui.slider(-10, 10, 0.1, value=0.6, label="XY Pos I(log)")
-    kd_xy = marimo.ui.slider(-10, 10, 0.1, value=1.1, label="XY Pos D(log)")
-    kp_att = marimo.ui.slider(-10, 10, 0.1, value=-5, label="Att P(log)")
-    ki_att = marimo.ui.slider(-10, 10, 0.1, value=0, label="Att I(log)")
-    kd_att = marimo.ui.slider(-10, 10, 0.1, value=1, label="Att D(log)")
-
-    return kd_alt, kd_att, kd_xy, ki_alt, ki_att, ki_xy, kp_alt, kp_att, kp_xy
 
 
 @app.cell
@@ -404,6 +390,21 @@ def _(viewer):
 def _(viewer):
     viewer.figs[3]
     return
+
+
+@app.cell
+def _(marimo):
+    kp_alt = marimo.ui.slider(-10, 10, 0.1, value=-3, label="Altitude P(log)")
+    ki_alt = marimo.ui.slider(-10, 10, 0.1, value=-10, label="Altitude I(log)")
+    kd_alt = marimo.ui.slider(-10, 10, 0.1, value=-2.5, label="Altitude D(log)")
+    kp_xy = marimo.ui.slider(-10, 10, 0.1, value=-2, label="XY Pos P(log)")
+    ki_xy = marimo.ui.slider(-10, 10, 0.1, value=-10, label="XY Pos I(log)")
+    kd_xy = marimo.ui.slider(-10, 10, 0.1, value=-3, label="XY Pos D(log)")
+    kp_att = marimo.ui.slider(-10, 10, 0.1, value=-3.7, label="Att P(log)")
+    ki_att = marimo.ui.slider(-10, 10, 0.1, value=-10, label="Att I(log)")
+    kd_att = marimo.ui.slider(-10, 10, 0.1, value=-3.9, label="Att D(log)")
+
+    return kd_alt, kd_att, kd_xy, ki_alt, ki_att, ki_xy, kp_alt, kp_att, kp_xy
 
 
 if __name__ == "__main__":
