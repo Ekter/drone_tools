@@ -1,0 +1,4 @@
+numpy
+matplotlib
+marimo
+# latex is required for nice plots, if you don't want it, comment lines 9 and 10 of visualize.py
